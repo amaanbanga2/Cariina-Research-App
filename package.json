@@ -1,0 +1,17 @@
+{
+  "name": "research-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @app/web",
+    "build": "npm run build -w @app/web",
+    "start": "npm run start -w @app/web"
+  },
+  "engines": {
+    "node": ">=18.17"
+  }
+}
+
