@@ -45,6 +45,14 @@ export default function ResultsInner() {
 	const batch = trpc.research.batch.useMutation();
 	const router = useRouter();
 
+	function toAnchorId(name: string, idx: number) {
+		const base = (name || "person")
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "-")
+			.replace(/^-+|-+$/g, "");
+		return `person-${idx}-${base}`;
+	}
+
 	React.useEffect(() => {
 		try {
 			const raw = sessionStorage.getItem("uploadedRows");
@@ -94,8 +102,20 @@ export default function ResultsInner() {
 	}, [rows]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
-		<div style={{ padding: 24, maxWidth: 1100, margin: "0 auto" }}>
-			<h1 style={{ fontSize: 28, marginBottom: 12 }}>Cariina Research App</h1>
+		<div style={{ padding: 24 }}>
+			<header
+				style={{
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					marginBottom: 16
+				}}
+			>
+				<h1 style={{ fontSize: 28, margin: 0 }}>Cariina Research App</h1>
+				<div style={{ color: "#6b7280", fontSize: 13 }}>
+					{results.length > 0 ? `${results.length} results` : null}
+				</div>
+			</header>
 			<div style={{ marginBottom: 12 }}>
 				<button
 					onClick={() => {
@@ -107,40 +127,131 @@ export default function ResultsInner() {
 					style={{
 						padding: "8px 12px",
 						borderRadius: 8,
-						border: "1px solid #ccc",
-						background: "white",
+						border: "1px solid #d1d5db",
+						background: "#ffffff",
 						cursor: "pointer"
 					}}
 				>
 					Upload another CSV
 				</button>
 			</div>
-			{rows ? (
-				<p style={{ color: "#666", marginBottom: 16 }}>
-					{loading
-						? `Processing ${rows.length} in parallel...`
-						: `Completed ${results.length}/${rows.length}`}
-				</p>
-			) : null}
-			{error ? <div style={{ color: "#b00020" }}>{error}</div> : null}
-			<div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
-				{results.map((r, idx) => (
-					<div
-						key={idx}
+			<div
+				style={{
+					display: "grid",
+					gridTemplateColumns: results.length > 0 ? "260px 1fr" : "1fr",
+					alignItems: "start",
+					gap: 16
+				}}
+			>
+				{/* Left: TOC */}
+				{results.length > 0 ? (
+					<nav
+						aria-label="People"
 						style={{
-							border: "1px solid #ddd",
+							position: "sticky",
+							top: 16,
+							alignSelf: "start",
+							border: "1px solid #e5e7eb",
 							borderRadius: 10,
-							padding: 16,
-							background: "#fff"
+							padding: 12,
+							background: "#ffffff",
+							boxShadow:
+								"0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)",
+							maxHeight: "80vh",
+							overflow: "auto"
 						}}
 					>
-						<h2 style={{ margin: "0 0 8px 0", fontSize: 20 }}>
-							{r.schoolDistrictName || "Unknown"}
-						</h2>
+						<div style={{ fontWeight: 700, marginBottom: 8, color: "#374151" }}>
+							People
+						</div>
+						<ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+							{results.map((r, idx) => {
+								const id = toAnchorId(r.superintendentFullName, idx);
+								return (
+									<li key={id} style={{ marginBottom: 6 }}>
+										<a
+											href={`#${id}`}
+											style={{
+												color: "#1d4ed8",
+												textDecoration: "none",
+												display: "block",
+												padding: "6px 8px",
+												borderRadius: 8
+											}}
+											onMouseOver={(e) =>
+												((e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+													"#f3f4f6")
+											}
+											onMouseOut={(e) =>
+												((e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+													"transparent")
+											}
+										>
+											{idx + 1}. {r.superintendentFullName}
+											{r.schoolDistrictName ? ` — ${r.schoolDistrictName}` : ""}
+										</a>
+									</li>
+								);
+							})}
+						</ul>
+					</nav>
+				) : null}
+
+				{/* Right: Content */}
+				<div>
+					{rows ? (
+						<p style={{ color: "#6b7280", marginBottom: 16 }}>
+							{loading
+								? `Processing ${rows.length} in parallel...`
+								: `Completed ${results.length}/${rows.length}`}
+						</p>
+					) : null}
+					{error ? <div style={{ color: "#b00020" }}>{error}</div> : null}
+					<div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+						{results.map((r, idx) => {
+							const id = toAnchorId(r.superintendentFullName, idx);
+							return (
+								<div
+									id={id}
+									key={id}
+									style={{
+										border: "1px solid #e5e7eb",
+										borderRadius: 10,
+										padding: 16,
+										background: "#ffffff",
+										boxShadow:
+											"0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)"
+									}}
+								>
+						<div style={{ margin: "0 0 8px 0" }}>
+							<div
+								style={{
+									fontSize: 18,
+									fontWeight: 700,
+									color: "#111827",
+									marginBottom: 4
+								}}
+							>
+								{idx + 1}. {r.superintendentFullName || "Unknown"}
+							</div>
+							<div style={{ color: "#4b5563" }}>
+								{r.superintendentTitle || "Unknown"} —{" "}
+								<strong>{r.schoolDistrictName || "Unknown"}</strong>
+							</div>
+						</div>
+						<hr style={{ border: 0, borderTop: "1px solid #eef2f7", margin: "8px 0" }} />
 
 						<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 							<section>
-								<h3 style={{ margin: "8px 0", fontSize: 14, color: "#555" }}>
+								<h3
+									style={{
+										margin: "8px 0",
+										fontSize: 12,
+										color: "#6b7280",
+										letterSpacing: 0.3,
+										textTransform: "uppercase"
+									}}
+								>
 									Superintendent
 								</h3>
 								<div style={{ lineHeight: 1.6 }}>
@@ -157,7 +268,15 @@ export default function ResultsInner() {
 							</section>
 
 							<section>
-								<h3 style={{ margin: "8px 0", fontSize: 14, color: "#555" }}>
+								<h3
+									style={{
+										margin: "8px 0",
+										fontSize: 12,
+										color: "#6b7280",
+										letterSpacing: 0.3,
+										textTransform: "uppercase"
+									}}
+								>
 									Contact
 								</h3>
 								<div style={{ lineHeight: 1.6 }}>
@@ -171,7 +290,15 @@ export default function ResultsInner() {
 							</section>
 
 							<section>
-								<h3 style={{ margin: "8px 0", fontSize: 14, color: "#555" }}>
+								<h3
+									style={{
+										margin: "8px 0",
+										fontSize: 12,
+										color: "#6b7280",
+										letterSpacing: 0.3,
+										textTransform: "uppercase"
+									}}
+								>
 									Enrollment & Classification
 								</h3>
 								<div style={{ lineHeight: 1.6 }}>
@@ -185,7 +312,15 @@ export default function ResultsInner() {
 							</section>
 
 							<section>
-								<h3 style={{ margin: "8px 0", fontSize: 14, color: "#555" }}>
+								<h3
+									style={{
+										margin: "8px 0",
+										fontSize: 12,
+										color: "#6b7280",
+										letterSpacing: 0.3,
+										textTransform: "uppercase"
+									}}
+								>
 									Web & Profile
 								</h3>
 								<div style={{ lineHeight: 1.6 }}>
@@ -218,14 +353,30 @@ export default function ResultsInner() {
 						</div>
 
 						<section style={{ marginTop: 12 }}>
-							<h3 style={{ margin: "8px 0", fontSize: 14, color: "#555" }}>
+							<h3
+								style={{
+									margin: "8px 0",
+									fontSize: 12,
+									color: "#6b7280",
+									letterSpacing: 0.3,
+									textTransform: "uppercase"
+								}}
+							>
 								Noteworthy Background
 							</h3>
 							<div style={{ lineHeight: 1.6 }}>{r.noteworthyBackground}</div>
 						</section>
 
 						<section style={{ marginTop: 12 }}>
-							<h3 style={{ margin: "8px 0", fontSize: 14, color: "#555" }}>
+							<h3
+								style={{
+									margin: "8px 0",
+									fontSize: 12,
+									color: "#6b7280",
+									letterSpacing: 0.3,
+									textTransform: "uppercase"
+								}}
+							>
 								Notable News (last 12 months)
 							</h3>
 							{Array.isArray(r.news) && r.news.length > 0 ? (
@@ -248,8 +399,11 @@ export default function ResultsInner() {
 								<div style={{ color: "#777" }}>No notable items.</div>
 							)}
 						</section>
+								</div>
+							);
+						})}
 					</div>
-				))}
+				</div>
 			</div>
 		</div>
 	);
