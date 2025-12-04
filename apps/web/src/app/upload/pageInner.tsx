@@ -39,6 +39,8 @@ const REQUIRED_COLUMNS = [
 
 export default function UploadInner() {
 	const [error, setError] = React.useState<string>("");
+	const [parsing, setParsing] = React.useState<boolean>(false);
+	const inputRef = React.useRef<HTMLInputElement | null>(null);
 	const router = useRouter();
 
 	function filterRow(raw: RawRow): FilteredRow | null {
@@ -61,27 +63,34 @@ export default function UploadInner() {
 
 	function handleFile(file: File) {
 		setError("");
+		setParsing(true);
 		Papa.parse<RawRow>(file, {
 			header: true,
 			skipEmptyLines: true,
+			worker: true,
 			complete: (res) => {
 				const filtered = (res.data || [])
 					.map(filterRow)
 					.filter((r): r is FilteredRow => !!r);
 				if (filtered.length === 0) {
 					setError("No valid rows found (need First Name and Last Name).");
+					setParsing(false);
 					return;
 				}
 				// Store rows for the results page to consume
 				try {
 					sessionStorage.setItem("uploadedRows", JSON.stringify(filtered));
-				} catch {
-					// ignore quota errors
+				} catch (e) {
+					setError("Unable to store data in session. Please close some tabs and retry.");
+					setParsing(false);
+					return;
 				}
+				setParsing(false);
 				router.push("/results");
 			},
 			error: (err) => {
 				setError(`Failed to parse CSV: ${err.message}`);
+				setParsing(false);
 			}
 		});
 	}
@@ -100,17 +109,22 @@ export default function UploadInner() {
 						padding: "12px 18px",
 						borderRadius: 10,
 						border: "1px solid #ccc",
-						background: "white",
-						cursor: "pointer",
+						background: parsing ? "#eee" : "white",
+						cursor: parsing ? "not-allowed" : "pointer",
 						fontWeight: 600
 					}}
 				>
-					Upload CSV
+					{parsing ? "Parsing..." : "Upload CSV"}
 				</label>
 				<input
 					id="csv-input"
 					type="file"
 					accept=".csv,text/csv"
+					ref={inputRef}
+					onClick={(e) => {
+						// Allow selecting the same file twice by clearing the value
+						(e.currentTarget as HTMLInputElement).value = "";
+					}}
 					onChange={(e) => {
 						const f = e.target.files?.[0];
 						if (f) handleFile(f);

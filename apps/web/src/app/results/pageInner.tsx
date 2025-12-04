@@ -25,6 +25,10 @@ type ResearchResult = {
 	superintendentTitle: string;
 	superintendentTenure: string;
 	intermediateSchoolDistrict: string;
+	city?: string;
+	state?: string;
+	nearestMajorCity?: string;
+ 	ruralAssociation?: string;
 	phoneNumber: string;
 	emailAddress: string;
 	totalEnrollment: string;
@@ -44,6 +48,7 @@ export default function ResultsInner() {
 	const [loading, setLoading] = React.useState<boolean>(false);
 	const batch = trpc.research.batch.useMutation();
 	const router = useRouter();
+	const [peopleQuery, setPeopleQuery] = React.useState<string>("");
 
 	function toAnchorId(name: string, idx: number) {
 		const base = (name || "person")
@@ -161,11 +166,60 @@ export default function ResultsInner() {
 							overflow: "auto"
 						}}
 					>
-						<div style={{ fontWeight: 700, marginBottom: 8, color: "#374151" }}>
+						<div
+							style={{
+								fontWeight: 700,
+								marginBottom: 8,
+								color: "#374151",
+								marginLeft: 8
+							}}
+						>
 							People
 						</div>
+						<div style={{ marginBottom: 8 }}>
+							<input
+								type="text"
+								placeholder="Search people…"
+								value={peopleQuery}
+								onChange={(e) => setPeopleQuery(e.target.value)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter") {
+										const q = peopleQuery.trim().toLowerCase();
+										if (!q) return;
+										const idx = results.findIndex((r) => {
+											const name = (r.superintendentFullName || "").toLowerCase();
+											const dist = (r.schoolDistrictName || "").toLowerCase();
+											return name.includes(q) || dist.includes(q);
+										});
+										if (idx >= 0) {
+											const id = toAnchorId(results[idx].superintendentFullName, idx);
+											const el = document.getElementById(id);
+											if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+										}
+									}
+								}}
+								style={{
+									width: "85%",
+									padding: "8px 10px",
+									borderRadius: 8,
+									border: "1px solid #e5e7eb",
+									outline: "none",
+									fontSize: 14,
+									marginLeft: 8
+								}}
+							/>
+						</div>
 						<ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-							{results.map((r, idx) => {
+							{results
+								.map((r, idx) => ({ r, idx }))
+								.filter(({ r }) => {
+									const q = peopleQuery.trim().toLowerCase();
+									if (!q) return true;
+									const name = (r.superintendentFullName || "").toLowerCase();
+									const dist = (r.schoolDistrictName || "").toLowerCase();
+									return name.includes(q) || dist.includes(q);
+								})
+								.map(({ r, idx }) => {
 								const id = toAnchorId(r.superintendentFullName, idx);
 								return (
 									<li key={id} style={{ marginBottom: 6 }}>
@@ -191,8 +245,7 @@ export default function ResultsInner() {
 											{r.schoolDistrictName ? ` — ${r.schoolDistrictName}` : ""}
 										</a>
 									</li>
-								);
-							})}
+								);})}
 						</ul>
 					</nav>
 				) : null}
@@ -264,6 +317,32 @@ export default function ResultsInner() {
 									<div>
 										<strong>Intermediate School District:</strong> {r.intermediateSchoolDistrict}
 									</div>
+									<div>
+										<strong>District Mission Statement:</strong>{" "}
+										{(r as any).missionStatement || "Unknown"}
+									</div>
+								</div>
+							</section>
+
+							<section>
+								<h3
+									style={{
+										margin: "8px 0",
+										fontSize: 12,
+										color: "#6b7280",
+										letterSpacing: 0.3,
+										textTransform: "uppercase"
+									}}
+								>
+									Location
+								</h3>
+								<div style={{ lineHeight: 1.6 }}>
+									<div>
+										<strong>City / State:</strong> {(r.city || "Unknown") + ", " + (r.state || "Unknown")}
+									</div>
+									<div>
+										<strong>Nearest Major City:</strong> {r.nearestMajorCity || "Unknown"}
+									</div>
 								</div>
 							</section>
 
@@ -307,6 +386,10 @@ export default function ResultsInner() {
 									</div>
 									<div>
 										<strong>Rural Classification:</strong> {r.ruralClassification}
+									</div>
+									<div>
+										<strong>State Rural Education Association:</strong>{" "}
+										{r.ruralAssociation || "Unknown"}
 									</div>
 								</div>
 							</section>

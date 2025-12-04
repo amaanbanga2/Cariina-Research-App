@@ -10,4 +10,5 @@ coverage
 .vercel
 .vscode
 *.local
+key.env
 

@@ -247,6 +247,11 @@ export const researchRouter = router({
 				intermediateSchoolDistrict?: string;
 				totalEnrollment?: string;
 				ruralClassification?: string;
+				nearestMajorCity?: string;
+				city?: string;
+				state?: string;
+				ruralAssociation?: string;
+				missionStatement?: string;
 				news?: { title: string; url: string; summary: string }[];
 			};
 
@@ -255,6 +260,11 @@ export const researchRouter = router({
 				intermediateSchoolDistrict: z.string().optional(),
 				totalEnrollment: z.string().optional(),
 				ruralClassification: z.string().optional(),
+				nearestMajorCity: z.string().optional(),
+				city: z.string().optional(),
+				state: z.string().optional(),
+				ruralAssociation: z.string().optional(),
+				missionStatement: z.string().optional(),
 				news: z
 					.array(
 						z.object({
@@ -306,6 +316,16 @@ export const researchRouter = router({
 								intermediateSchoolDistrict: "<string>",
 								totalEnrollment: "<string>",
 								ruralClassification: "<string>",
+								nearestMajorCity:
+									"<the nearest major city to this district (by common sense geography), e.g., 'Dallas, TX'>",
+								city:
+									"<the district's primary city (from the official site footer/contact or About page)>",
+								state:
+									"<the district's state (2-letter code if in the U.S., else full name)>",
+								ruralAssociation:
+									"<the name of the state's rural education association this district is part of, if any. Examples: 'Texas Association of Rural Schools', 'Texas Association of Community Schools', 'Missouri Association of Rural Education'. If none is evident, return 'Unknown'>",
+								missionStatement:
+									"<the district's mission statement text as written on the official website (About page or footer link). If multiple, give the primary; if not found, return 'Unknown'>",
 								news: [
 									{
 										title: "<headline>",
@@ -321,7 +341,7 @@ export const researchRouter = router({
 						"Context:",
 						`- ${context}`,
 						"",
-						"Do NOT include citations or markdown links."
+						"Do NOT include citations or markdown links. Prefer the official district site for city/state."
 					].join("\n");
 
 					const resp = await (client as any).responses.create({
@@ -345,6 +365,11 @@ export const researchRouter = router({
 						intermediateSchoolDistrict: sanitizeText(parsed?.intermediateSchoolDistrict),
 						totalEnrollment: parsed?.totalEnrollment,
 						ruralClassification: sanitizeText(parsed?.ruralClassification),
+						nearestMajorCity: sanitizeText(parsed?.nearestMajorCity),
+						city: sanitizeText(parsed?.city),
+						state: sanitizeText(parsed?.state),
+						ruralAssociation: sanitizeText(parsed?.ruralAssociation),
+						missionStatement: sanitizeText(parsed?.missionStatement),
 						news:
 							parsed?.news?.map((n) => ({
 								title: sanitizeText(n.title) || "",
@@ -433,6 +458,11 @@ export const researchRouter = router({
 						districtWebsite: schoolInfo.districtWebsite || "Unknown",
 						personLinkedIn: parsed?.personLinkedIn || "Unknown",
 						personProfileUrl: parsed?.personProfileUrl || "Unknown",
+						city: r.city || schoolInfo.city || "Unknown",
+						state: r.state || schoolInfo.state || "Unknown",
+						nearestMajorCity: schoolInfo.nearestMajorCity || "Unknown",
+						ruralAssociation: schoolInfo.ruralAssociation || "Unknown",
+						missionStatement: schoolInfo.missionStatement || "Unknown",
 						news: schoolInfo.news || []
 					};
 				})
