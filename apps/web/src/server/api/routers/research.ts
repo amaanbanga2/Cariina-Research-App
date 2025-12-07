@@ -341,7 +341,29 @@ export const researchRouter = router({
 						"Context:",
 						`- ${context}`,
 						"",
-						"Do NOT include citations or markdown links. Prefer the official district site for city/state."
+						"Do NOT include citations or markdown links. Prefer the official district site for city/state.",
+						"",
+						"Guidance:",
+						"- For ruralClassification: Prefer official locale/NCES-style categories when available (e.g., Rural Distant/Remote, Town Fringe/Distant/Remote, Suburban, Urban, etc.). If not available, provide the clearest descriptive classification consistent with credible sources.",
+						"- For ruralAssociation: Consider all types of rural associations, including:",
+						"   • \"Rural Schools Association\"",
+						"   • \"Small Schools Association\"",
+						"   • \"Community Schools Association\"",
+						"   • \"Rural Education Alliance\"",
+						"   • State-specific groups (e.g., MARE in Missouri, TACS/TARS in Texas, PARSS in Pennsylvania).",
+						"- For intermediateSchoolDistrict (ISD/ESC/BOCES/RESA/IU/LEA equivalents):",
+						"   • Prioritize the district’s official website first (About, Administration, Departments, Leadership, or Board pages).",
+						"   • Use URL/domain cues and on-page language (e.g., contains 'isd', 'esc', 'k12', 'schools', districtname.org).",
+						"   • Apply state naming conventions:",
+						"       - TX: Independent School District (ISD), Education Service Center Region (ESC Region N).",
+						"       - MI: Intermediate School District (ISD) or Regional Educational Service Agency (RESA).",
+						"       - NY: BOCES (Board of Cooperative Educational Services).",
+						"       - PA: Intermediate Unit (IU).",
+						"       - KS: Unified School District (USD).",
+						"       - VT: Supervisory Union/District (SU/SD) or CSD.",
+						"       - Use the appropriate intermediate entity for other states when identifiable.",
+						"   • If the school is part of a charter network, identify the charter organization instead of an ISD.",
+						"   • Return the short official name (e.g., 'ESC Region 13', 'Oakland ISD', 'Capital Region BOCES')."
 					].join("\n");
 
 					const resp = await (client as any).responses.create({
